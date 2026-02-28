@@ -1,0 +1,42 @@
+name: Daily Meridian Entry
+
+on:
+  schedule:
+    # 9:00 AM Lisbon time (WET/WEST)
+    # WET (winter) = UTC+0, so 9 AM = 09:00 UTC
+    # WEST (summer) = UTC+1, so 9 AM = 08:00 UTC
+    # Using 09:00 UTC (will be 9 AM in winter, 10 AM in summer)
+    - cron: '0 9 * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub
+
+jobs:
+  generate-entry:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Generate diary entry
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node generate-entry.cjs
+
+      - name: Commit and push
+        run: |
+          git config user.name "Meridian Bot"
+          git config user.email "meridian@automated.diary"
+          git add src/data/entries/
+          DATE=$(date +%Y-%m-%d)
+          # Only commit if there are changes
+          if git diff --staged --quiet; then
+            echo "No new entry to commit"
+          else
+            git commit -m "entry: $DATE"
+            git push
+          fi
