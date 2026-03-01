@@ -140,7 +140,7 @@ async function main() {
       .replace(/<\/?antml:cite[^>]*>/gi, '')    //  variant
       .replace(/<\/?source[^>]*>/gi, '')        // <source> tags
       .replace(/<\/?search_result[^>]*>/gi, '') // search result wrappers
-      .replace(/\s{2,}/g, ' ')                  // collapse double spaces left behind
+      .replace(/[^\S\n]+/g, ' ')               // collapse spaces but KEEP newlines
       .trim();
   }
   entry.body = sanitize(entry.body);
