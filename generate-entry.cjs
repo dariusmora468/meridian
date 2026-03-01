@@ -133,6 +133,20 @@ async function main() {
   // Ensure date is correct
   entry.date = today;
 
+  // Sanitize: strip <cite>, , and other API artifacts from text fields
+  function sanitize(text) {
+    return text
+      .replace(/<\/?cite[^>]*>/gi, '')          // <cite index="...">...</cite>
+      .replace(/<\/?antml:cite[^>]*>/gi, '')    //  variant
+      .replace(/<\/?source[^>]*>/gi, '')        // <source> tags
+      .replace(/<\/?search_result[^>]*>/gi, '') // search result wrappers
+      .replace(/\s{2,}/g, ' ')                  // collapse double spaces left behind
+      .trim();
+  }
+  entry.body = sanitize(entry.body);
+  entry.title = sanitize(entry.title);
+  if (entry.subtitle) entry.subtitle = sanitize(entry.subtitle);
+
   // Write entry
   fs.writeFileSync(entryPath, JSON.stringify(entry, null, 2));
   console.log(`✓ Entry written: ${entryPath}`);
